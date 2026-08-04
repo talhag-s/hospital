@@ -133,7 +133,8 @@ export default function PatientForm({ initialData, autoId, onSave, onSubmit, onC
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const selectedDepartment = normalizedDepartments.find((dept) => dept.id === form.departmentId);
+    const selectedDepartment = normalizedDepartments.find((dept) => dept.id === form.departmentId || dept.name === form.departmentId);
+    const selectedDoctor = normalizedDoctors.find((doc) => doc.id === form.doctorId || doc.name === form.doctorId);
 
     let assignedBed = '';
     if (form.bedRequired === 'Yes') {
@@ -163,9 +164,22 @@ export default function PatientForm({ initialData, autoId, onSave, onSubmit, onC
       return;
     }
 
+    const pName = form.fullName || form.name || 'Unnamed Patient';
+    const pPhone = form.phoneNumber || form.phone || '';
+    const dName = selectedDoctor?.name || form.doctorId || 'Dr. Amir Khan';
+    const dId = selectedDoctor?.id || form.doctorId || 'DOC-008';
+
     handleSave?.({
       ...form,
-      department: selectedDepartment?.name || form.department,
+      name: pName,
+      fullName: pName,
+      phone: pPhone,
+      phoneNumber: pPhone,
+      department: selectedDepartment?.name || form.departmentId || 'General',
+      departmentId: selectedDepartment?.id || form.departmentId || 'dept-01',
+      assignedDoctor: dName,
+      doctor: dName,
+      doctorId: dId,
       bedNumber: assignedBed,
       bedRequired: form.bedRequired,
       status: form.bedRequired === 'Yes' ? 'Admitted' : 'OPD',

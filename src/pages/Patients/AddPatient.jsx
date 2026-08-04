@@ -19,9 +19,12 @@ export default function AddPatient() {
 
   const handleSubmit = (formData) => {
     try {
-      const selectedDoctor = doctors.find((doc) => doc.id === formData.doctorId);
+      const selectedDoctor = doctors.find((doc) => doc.id === formData.doctorId || doc.name === formData.assignedDoctor || doc.name === formData.doctorId);
       const selectedDepartment = departments.find((dept) => dept.id === formData.departmentId) || departments.find((dept) => dept.name === formData.department);
       const patientName = formData.fullName || formData.name || 'Unnamed Patient';
+      const docName = selectedDoctor?.name || formData.assignedDoctor || formData.doctor || 'Dr. Amir Khan';
+      const docId = selectedDoctor?.id || formData.doctorId || 'DOC-008';
+
       const newPatient = {
         ...formData,
         id: newPatientId,
@@ -35,6 +38,7 @@ export default function AddPatient() {
         bloodGroup: formData.bloodGroup || 'O+',
         maritalStatus: formData.maritalStatus || 'Unknown',
         phone: formData.phoneNumber || formData.phone || '',
+        phoneNumber: formData.phoneNumber || formData.phone || '',
         email: formData.email || `${patientName.toLowerCase().replace(/\s+/g, '.')}@hospital.local`,
         address: formData.address || '',
         city: formData.city || '',
@@ -51,7 +55,10 @@ export default function AddPatient() {
         diabetes: formData.diabetes || '',
         insuranceNumber: formData.insuranceNumber || '',
         department: selectedDepartment?.name || formData.department || 'General',
-        assignedDoctor: selectedDoctor?.name || formData.assignedDoctor || 'Assigned Doctor',
+        departmentId: selectedDepartment?.id || formData.departmentId || 'dept-01',
+        assignedDoctor: docName,
+        doctor: docName,
+        doctorId: docId,
         roomNumber: formData.roomNumber || '',
         bedNumber: formData.bedNumber || '',
         bedRequired: formData.bedRequired || 'No',
@@ -75,15 +82,13 @@ export default function AddPatient() {
           ward: selectedDepartment?.name || formData.department || 'General Ward',
           attendingNurse: 'Nurse Pending Assignment',
           condition: 'Under Evaluation',
-          admittedBy: selectedDoctor?.name || formData.assignedDoctor || ''
+          admittedBy: docName
         },
         dischargeDetails: {
           dischargeDate: 'Pending',
           summary: 'Patient recently admitted.',
           followUpDate: 'TBD'
-        },
-        doctorId: formData.doctorId,
-        departmentId: formData.departmentId
+        }
       };
 
       addPatient(newPatient);

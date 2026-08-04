@@ -204,24 +204,24 @@ export const isAppointmentForDoctor = (apt, currentDoctor, user) => {
   if (!apt) return false;
   if (!currentDoctor && !user) return false;
 
-  const docId = currentDoctor?.id || user?.id;
+  const docId = (currentDoctor?.id || user?.id || '').toLowerCase().trim();
   const docNameClean = (currentDoctor?.name || user?.name || '').toLowerCase().replace(/^dr\.\s*/i, '').trim();
 
-  // Match by doctorId
-  if (docId && apt.doctorId === docId) return true;
+  const aptDocId = (apt.doctorId || '').toLowerCase().trim();
+  if (docId && aptDocId) {
+    if (aptDocId === docId) return true;
+    const legacyMap = {
+      'doc-001': 'doc-008', 'doc-008': 'doc-001', 'doc-101': 'doc-008',
+      'doc-002': 'doc-004', 'doc-004': 'doc-002', 'doc-102': 'doc-004'
+    };
+    if (legacyMap[docId] === aptDocId || legacyMap[aptDocId] === docId) return true;
+  }
 
-  // Legacy map matching e.g. DOC-001 vs DOC-101
-  const legacyMap = {
-    'DOC-001': 'DOC-101', 'DOC-101': 'DOC-001', 'doc_1': 'DOC-001',
-    'DOC-002': 'DOC-102', 'DOC-102': 'DOC-002', 'doc_2': 'DOC-002',
-    'DOC-003': 'DOC-103', 'DOC-103': 'DOC-003', 'doc_3': 'DOC-003'
-  };
-  if (docId && legacyMap[docId] && apt.doctorId === legacyMap[docId]) return true;
-
-  // Match by clean doctor name
   const aptDocNameClean = (apt.doctorName || apt.doctor || '').toLowerCase().replace(/^dr\.\s*/i, '').trim();
-  if (docNameClean && aptDocNameClean && (docNameClean === aptDocNameClean || docNameClean.includes(aptDocNameClean) || aptDocNameClean.includes(docNameClean))) {
-    return true;
+  if (docNameClean && aptDocNameClean) {
+    if (docNameClean === aptDocNameClean || docNameClean.includes(aptDocNameClean) || aptDocNameClean.includes(docNameClean)) {
+      return true;
+    }
   }
 
   return false;
@@ -245,33 +245,59 @@ export const isPatientForDoctor = (patient, currentDoctor, user, doctorAppointme
   }
 
   // 3. Default scope ('assigned'): Doctor sees only assigned/treated patients
-  const docId = currentDoctor?.id || user?.id;
+  const docId = (currentDoctor?.id || user?.id || '').toLowerCase().trim();
   const docNameClean = (currentDoctor?.name || user?.name || '').toLowerCase().replace(/^dr\.\s*/i, '').trim();
 
   // 1. Match by patient.doctorId
-  if (docId && patient.doctorId === docId) return true;
+  const pDocId = (patient.doctorId || '').toLowerCase().trim();
+  if (docId && pDocId) {
+    if (pDocId === docId) return true;
+    const legacyMap = {
+      'doc-001': 'doc-008', 'doc-008': 'doc-001', 'doc-101': 'doc-008',
+      'doc-002': 'doc-004', 'doc-004': 'doc-002', 'doc-102': 'doc-004'
+    };
+    if (legacyMap[docId] === pDocId || legacyMap[pDocId] === docId) return true;
+  }
 
-  // Legacy ID mapping
-  const legacyMap = {
-    'DOC-001': 'DOC-101', 'DOC-101': 'DOC-001', 'doc_1': 'DOC-001',
-    'DOC-002': 'DOC-102', 'DOC-102': 'DOC-002', 'doc_2': 'DOC-002',
-    'DOC-003': 'DOC-103', 'DOC-103': 'DOC-003', 'doc_3': 'DOC-003'
-  };
-  if (docId && legacyMap[docId] && patient.doctorId === legacyMap[docId]) return true;
+  // 2. Match by patient.assignedDoctor or patient.doctor or patient.admittedBy or patient.admissionDetails.admittedBy
+  const assignedStr = (
+    patient.assignedDoctor ||
+    patient.doctor ||
+    patient.admittedBy ||
+    patient.admissionDetails?.admittedBy ||
+    ''
+  ).toLowerCase().replace(/^dr\.\s*/g, '').trim();
 
-  // 2. Match by patient.assignedDoctor or patient.doctor or patient.admittedBy
-  const assignedClean = (patient.assignedDoctor || patient.doctor || patient.admittedBy || '').toLowerCase().replace(/^dr\.\s*/i, '').trim();
-  if (docNameClean && assignedClean && (docNameClean === assignedClean || docNameClean.includes(assignedClean) || assignedClean.includes(docNameClean))) {
-    return true;
+  if (docNameClean && assignedStr) {
+    if (docNameClean === assignedStr || docNameClean.includes(assignedStr) || assignedStr.includes(docNameClean)) {
+      return true;
+    }
+    const docParts = docNameClean.split(/\s+/).filter(p => p.length > 2);
+    if (docParts.some(part => assignedStr.includes(part))) {
+      return true;
+    }
   }
 
   // 3. Match if patient exists in doctor's appointments
+  const patientId = (patient.id || '').toLowerCase().trim();
   const patientNameClean = (patient.name || patient.fullName || '').toLowerCase().trim();
+
   const matchApt = (doctorAppointments || []).some((a) => {
-    if (a.patientId && patient.id && a.patientId === patient.id) return true;
+    if (patientId && a.patientId && a.patientId.toLowerCase().trim() === patientId) return true;
     const aptPNameClean = (a.patientName || '').toLowerCase().trim();
     return patientNameClean && aptPNameClean && (patientNameClean === aptPNameClean || patientNameClean.includes(aptPNameClean) || aptPNameClean.includes(patientNameClean));
   });
 
-  return matchApt;
+  if (matchApt) return true;
+
+  // 4. Department fallback: If patient has department matching doctor's department and has no other doctor assigned
+  const patientDept = (patient.department || patient.departmentId || '').toLowerCase().trim();
+  const docDept = (currentDoctor?.department || currentDoctor?.departmentId || user?.department || '').toLowerCase().trim();
+  const hasUnassignedDoctor = !patient.doctorId && (!patient.assignedDoctor || patient.assignedDoctor === 'Assigned Doctor');
+
+  if (hasUnassignedDoctor && patientDept && docDept && (patientDept === docDept || patientDept.includes(docDept) || docDept.includes(patientDept))) {
+    return true;
+  }
+
+  return false;
 };
