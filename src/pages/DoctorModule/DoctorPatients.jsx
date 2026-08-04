@@ -69,8 +69,20 @@ export default function DoctorPatients() {
           </h1>
           <p className="text-sm text-gray-600 mt-1">Patients assigned to or under treatment with {currentDoctor.name}</p>
         </div>
-        <div className="bg-indigo-50 border border-indigo-200 px-4 py-2 rounded-xl text-indigo-800 text-xs font-semibold">
-          Total Assigned Patients: {myPatients.length}
+        <div className="flex flex-wrap items-center gap-2">
+          {currentDoctor.patientAccessScope === 'all' || currentDoctor.canViewAllPatients ? (
+            <span className="bg-emerald-50 border border-emerald-300 px-3 py-1.5 rounded-xl text-emerald-800 text-xs font-bold shadow-2xs">
+              ✓ Full Access: Showing All 4 System Patients
+            </span>
+          ) : currentDoctor.patientAccessScope === 'none' || currentDoctor.showZeroPatients ? (
+            <span className="bg-rose-50 border border-rose-300 px-3 py-1.5 rounded-xl text-rose-800 text-xs font-bold shadow-2xs">
+              🔒 Restricted: Can Show 0 Patients
+            </span>
+          ) : (
+            <span className="bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-xl text-indigo-800 text-xs font-bold">
+              Total Assigned Patients: {myPatients.length}
+            </span>
+          )}
         </div>
       </div>
 

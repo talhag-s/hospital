@@ -1,10 +1,6 @@
 export const doctors = [
-  { id: 'DOC-010', name: 'Dr. Hina Baig', department: 'Cardiology' },
-  { id: 'DOC-009', name: 'Dr. Imran Javed', department: 'Orthopedics' },
-  { id: 'DOC-003', name: 'Dr. Hassan Raza', department: 'Emergency' },
-  { id: 'DOC-004', name: 'Dr. Fatima Iqbal', department: 'Pharmacy' },
   { id: 'DOC-008', name: 'Dr. Amir Khan', department: 'Cardiology' },
-  { id: 'DOC-027', name: 'Abbas Ahmed', department: 'Pharmacy' }
+  { id: 'DOC-004', name: 'Dr. Fatima Iqbal', department: 'Pharmacy' },
 ];
 
 export const departments = [
@@ -55,9 +51,9 @@ export const appointments = [
     id: 'APT-004',
     patientId: 'PAT-1004',
     patientName: 'Hamza Malik',
-    doctorId: 'DOC-010',
-    doctorName: 'Dr. Hina Baig',
-    department: 'Cardiology',
+    doctorId: 'DOC-004',
+    doctorName: 'Dr. Fatima Iqbal',
+    department: 'Pharmacy',
     date: '2026-08-04',
     time: '11:45',
     status: 'Confirmed'
@@ -78,3 +74,4 @@ export const queueRecords = [
     arrivalTime: '09:15'
   }
 ];
+

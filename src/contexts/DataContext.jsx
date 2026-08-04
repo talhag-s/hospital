@@ -113,7 +113,18 @@ export function DataProvider({ children }) {
         if (!d) return d;
         const existingEmail = (d.email || d.loginEmail || '').trim().toLowerCase();
         const email = existingEmail || `${String(d.name || 'doctor').toLowerCase().replace(/^dr\.\s*/i, '').trim().split(' ')[0]}@gmail.com`;
-        return { ...d, email, loginEmail: email, password: d.password || d.loginPassword || 'password123' };
+        let scope = d.patientAccessScope;
+        if (d.id === 'DOC-008' || email === 'amir@gmail.com') scope = 'all';
+        if (d.id === 'DOC-004' || email === 'fatima@gmail.com') scope = 'none';
+        return {
+          ...d,
+          email,
+          loginEmail: email,
+          password: d.password || d.loginPassword || 'password123',
+          patientAccessScope: scope || d.patientAccessScope || 'assigned',
+          canViewAllPatients: scope === 'all' || d.canViewAllPatients === true,
+          showZeroPatients: scope === 'none' || d.showZeroPatients === true
+        };
       });
   });
   const [wards, setWards] = useState(() => safeRead(DATA_KEYS.WARDS, WARDS_DATA));

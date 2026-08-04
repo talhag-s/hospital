@@ -68,29 +68,11 @@ export const INITIAL_PATIENTS = [
     status: 'Outpatient',
     bedRequired: 'No',
     bedNumber: 'N/A',
-    department: 'Cardiology',
-    departmentId: 'dept-01',
-    assignedDoctor: 'Dr. Hina Baig',
-    doctorId: 'DOC-010',
+    department: 'Pharmacy',
+    departmentId: 'dept-03',
+    assignedDoctor: 'Dr. Fatima Iqbal',
+    doctorId: 'DOC-004',
     diagnosis: 'Arrhythmia Follow-up',
     admissionDate: '2026-08-03'
-  },
-  {
-    id: 'PAT-1005',
-    name: 'Tariq Mehmood',
-    fullName: 'Tariq Mehmood',
-    age: 58,
-    gender: 'Male',
-    phone: '+92 345 1122334',
-    bloodGroup: 'O-',
-    status: 'Critical',
-    bedRequired: 'Yes',
-    bedNumber: 'EMERG-01',
-    department: 'Emergency',
-    departmentId: 'dept-04',
-    assignedDoctor: 'Dr. Hassan Raza',
-    doctorId: 'DOC-003',
-    diagnosis: 'Acute Respiratory Distress',
-    admissionDate: '2026-08-04'
   }
 ];

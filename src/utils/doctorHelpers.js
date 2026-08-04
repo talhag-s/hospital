@@ -190,7 +190,10 @@ export const getDoctorForUser = (user, doctors = []) => {
       department: user.department || 'General Medicine',
       specialization: 'Consultant',
       availability: 'Available',
-      schedule: []
+      schedule: [],
+      patientAccessScope: user.patientAccessScope || 'assigned',
+      canViewAllPatients: user.canViewAllPatients,
+      showZeroPatients: user.showZeroPatients
     };
   }
 
@@ -228,6 +231,20 @@ export const isPatientForDoctor = (patient, currentDoctor, user, doctorAppointme
   if (!patient) return false;
   if (!currentDoctor && !user) return false;
 
+  // Determine patient access scope for this doctor
+  const scope = currentDoctor?.patientAccessScope || currentDoctor?.patientVisibility || user?.patientAccessScope || user?.patientVisibility;
+
+  // 1. If scope is 'none' / 'zero' or showZeroPatients is true -> doctor can view 0 patients
+  if (scope === 'none' || scope === 'zero' || currentDoctor?.showZeroPatients === true || user?.showZeroPatients === true) {
+    return false;
+  }
+
+  // 2. If scope is 'all' or canViewAllPatients is true -> doctor can view ALL patients in system
+  if (scope === 'all' || currentDoctor?.canViewAllPatients === true || user?.canViewAllPatients === true) {
+    return true;
+  }
+
+  // 3. Default scope ('assigned'): Doctor sees only assigned/treated patients
   const docId = currentDoctor?.id || user?.id;
   const docNameClean = (currentDoctor?.name || user?.name || '').toLowerCase().replace(/^dr\.\s*/i, '').trim();
 
@@ -258,4 +275,3 @@ export const isPatientForDoctor = (patient, currentDoctor, user, doctorAppointme
 
   return matchApt;
 };
-
