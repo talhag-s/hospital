@@ -204,25 +204,16 @@ export const isAppointmentForDoctor = (apt, currentDoctor, user) => {
   if (!apt) return false;
   if (!currentDoctor && !user) return false;
 
-  const docId = (currentDoctor?.id || user?.id || '').toLowerCase().trim();
+  const docId = (currentDoctor?.id || user?.id || '').trim();
   const docNameClean = (currentDoctor?.name || user?.name || '').toLowerCase().replace(/^dr\.\s*/i, '').trim();
 
-  const aptDocId = (apt.doctorId || '').toLowerCase().trim();
-  if (docId && aptDocId) {
-    if (aptDocId === docId) return true;
-    const legacyMap = {
-      'doc-001': 'doc-008', 'doc-008': 'doc-001', 'doc-101': 'doc-008',
-      'doc-002': 'doc-004', 'doc-004': 'doc-002', 'doc-102': 'doc-004'
-    };
-    if (legacyMap[docId] === aptDocId || legacyMap[aptDocId] === docId) return true;
-  }
+  // Strict doctorId equality only
+  const aptDocId = (apt.doctorId || '').trim();
+  if (docId && aptDocId && aptDocId === docId) return true;
 
+  // Exact doctor name match
   const aptDocNameClean = (apt.doctorName || apt.doctor || '').toLowerCase().replace(/^dr\.\s*/i, '').trim();
-  if (docNameClean && aptDocNameClean) {
-    if (docNameClean === aptDocNameClean || docNameClean.includes(aptDocNameClean) || aptDocNameClean.includes(docNameClean)) {
-      return true;
-    }
-  }
+  if (docNameClean && aptDocNameClean && docNameClean === aptDocNameClean) return true;
 
   return false;
 };
@@ -232,34 +223,28 @@ export const isPatientForDoctor = (patient, currentDoctor, user, doctorAppointme
   if (!currentDoctor && !user) return false;
 
   // Determine patient access scope for this doctor
-  const scope = currentDoctor?.patientAccessScope || currentDoctor?.patientVisibility || user?.patientAccessScope || user?.patientVisibility;
+  const scope = currentDoctor?.patientAccessScope || user?.patientAccessScope;
 
-  // 1. If scope is 'none' / 'zero' or showZeroPatients is true -> doctor can view 0 patients
-  if (scope === 'none' || scope === 'zero' || currentDoctor?.showZeroPatients === true || user?.showZeroPatients === true) {
+  // Scope: 'none' -> see 0 patients
+  if (scope === 'none' || scope === 'zero' || currentDoctor?.showZeroPatients === true) {
     return false;
   }
 
-  // 2. If scope is 'all' or canViewAllPatients is true -> doctor can view ALL patients in system
-  if (scope === 'all' || currentDoctor?.canViewAllPatients === true || user?.canViewAllPatients === true) {
+  // Scope: 'all' -> see all patients
+  if (scope === 'all' || currentDoctor?.canViewAllPatients === true) {
     return true;
   }
 
-  // 3. Default scope ('assigned'): Doctor sees ONLY explicitly assigned patients
-  const docId = (currentDoctor?.id || user?.id || '').toLowerCase().trim();
+  const docId = (currentDoctor?.id || user?.id || '').trim();
   const docNameClean = (currentDoctor?.name || user?.name || '').toLowerCase().replace(/^dr\.\s*/i, '').trim();
 
-  // 1. Match by patient.doctorId
-  const pDocId = (patient.doctorId || '').toLowerCase().trim();
-  if (docId && pDocId) {
-    if (pDocId === docId) return true;
-    const legacyMap = {
-      'doc-001': 'doc-008', 'doc-008': 'doc-001', 'doc-101': 'doc-008',
-      'doc-002': 'doc-004', 'doc-004': 'doc-002', 'doc-102': 'doc-004'
-    };
-    if (legacyMap[docId] === pDocId || legacyMap[pDocId] === docId) return true;
+  // 1. Check strict doctorId equality (case-insensitive)
+  const pDocId = (patient.doctorId || '').trim();
+  if (docId && pDocId && docId.toLowerCase() === pDocId.toLowerCase()) {
+    return true;
   }
 
-  // 2. Match by patient.assignedDoctor / doctor / admittedBy
+  // 2. Match by patient.assignedDoctor / doctor / admittedBy (exact name match)
   const assignedStr = (
     patient.assignedDoctor ||
     patient.doctor ||
@@ -268,18 +253,17 @@ export const isPatientForDoctor = (patient, currentDoctor, user, doctorAppointme
     ''
   ).toLowerCase().replace(/^dr\.\s*/g, '').trim();
 
-  // Exact name match only — no partial/includes match to avoid cross-doctor leakage
   if (docNameClean && assignedStr && docNameClean === assignedStr) {
     return true;
   }
 
   // 3. Match if patient exists in doctor's appointments
-  const patientId = (patient.id || '').toLowerCase().trim();
-  const patientNameClean = (patient.name || patient.fullName || '').toLowerCase().trim();
+  const patientId = (patient.id || '').trim().toLowerCase();
+  const patientNameClean = (patient.name || patient.fullName || '').trim().toLowerCase();
 
   const matchApt = (doctorAppointments || []).some((a) => {
-    if (patientId && a.patientId && a.patientId.toLowerCase().trim() === patientId) return true;
-    const aptPNameClean = (a.patientName || '').toLowerCase().trim();
+    if (patientId && a.patientId && a.patientId.trim().toLowerCase() === patientId) return true;
+    const aptPNameClean = (a.patientName || '').trim().toLowerCase();
     return patientNameClean && aptPNameClean && patientNameClean === aptPNameClean;
   });
 
