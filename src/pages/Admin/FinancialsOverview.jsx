@@ -47,25 +47,34 @@ export default function FinancialsOverview() {
   const filterByRange = (items, dateKey) => {
     if (reportRange === 'All') return items;
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayStr = now.toISOString().slice(0, 10);
 
     if (reportRange === 'Today') {
-      const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
       return items.filter((item) => {
-        const itemDate = new Date(item[dateKey]);
-        return itemDate >= today && itemDate < tomorrow;
+        if (!item || !item[dateKey]) return false;
+        const itemDateStr = String(item[dateKey]).slice(0, 10);
+        return itemDateStr === todayStr;
       });
     }
 
     if (reportRange === 'This Month') {
-      const start = new Date(now.getFullYear(), now.getMonth(), 1);
-      return items.filter((item) => new Date(item[dateKey]) >= start);
+      const currentMonthStr = todayStr.slice(0, 7);
+      return items.filter((item) => {
+        if (!item || !item[dateKey]) return false;
+        const itemMonthStr = String(item[dateKey]).slice(0, 7);
+        return itemMonthStr === currentMonthStr;
+      });
     }
 
     if (reportRange === 'Last 90 Days') {
       const start = new Date();
       start.setDate(start.getDate() - 90);
-      return items.filter((item) => new Date(item[dateKey]) >= start);
+      const startStr = start.toISOString().slice(0, 10);
+      return items.filter((item) => {
+        if (!item || !item[dateKey]) return false;
+        const itemDateStr = String(item[dateKey]).slice(0, 10);
+        return itemDateStr >= startStr;
+      });
     }
 
     return items;

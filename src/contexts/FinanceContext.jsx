@@ -8,6 +8,7 @@ import {
   INITIAL_REFUNDS
 } from '../data/financeData';
 import { formatCurrency } from '../utils/financeUtils';
+import { useData } from './DataContext';
 
 const FinanceContext = createContext(null);
 
@@ -26,8 +27,19 @@ const groupBy = (items, key) =>
     return acc;
   }, {});
 
-const loadRealInvoices = () => {
+const loadRealInvoices = (passedPatients = null, passedAppts = null) => {
   const invoiceMap = new Map();
+
+  let deletedIds = new Set();
+  try {
+    const savedDeleted = window.localStorage.getItem('finance_deleted_invoices');
+    if (savedDeleted) {
+      const parsed = JSON.parse(savedDeleted);
+      if (Array.isArray(parsed)) {
+        deletedIds = new Set(parsed);
+      }
+    }
+  } catch (e) {}
 
   // 1. Manually saved/created invoices from localStorage
   try {
@@ -36,7 +48,7 @@ const loadRealInvoices = () => {
       const parsed = JSON.parse(savedInvoices);
       if (Array.isArray(parsed) && parsed.length > 0) {
         parsed.forEach((inv) => {
-          if (inv.id) invoiceMap.set(inv.id, inv);
+          if (inv.id && !deletedIds.has(inv.id)) invoiceMap.set(inv.id, inv);
         });
       }
     }
@@ -44,82 +56,97 @@ const loadRealInvoices = () => {
     console.error('Failed loading finance_invoices', error);
   }
 
-  // 2. Real Patients entered into system (hospital_erp_patients_data)
+  // 2. Real Patients entered into system
   try {
-    const storedPatients = window.localStorage.getItem('hospital_erp_patients_data');
-    if (storedPatients) {
-      const patients = JSON.parse(storedPatients);
-      if (Array.isArray(patients)) {
-        patients.forEach((pt, index) => {
-          const invId = `INV-${pt.id || ('PAT-' + (1000 + index))}`;
-          if (!invoiceMap.has(invId)) {
-            const rawFee = pt.consultationFee || pt.billing?.totalAmount || pt.billing?.paidAmount || '1500';
-            const amount = Number(String(rawFee).replace(/\D/g, '')) || 1500;
-            const status = (pt.paymentStatus === 'Pending' || pt.billing?.status === 'Pending') ? 'Pending' : 'Paid';
-            const paymentMethod = pt.paymentMode || pt.paymentMethod || 'Cash';
-            const invoiceDate = pt.admissionDate || pt.registeredDate || pt.date || new Date().toISOString().slice(0, 10);
-
-            invoiceMap.set(invId, {
-              id: invId,
-              patientId: pt.id || `PAT-${1000 + index}`,
-              patientName: pt.name || pt.fullName || 'Patient',
-              doctorId: pt.doctorId || 'DR-101',
-              doctorName: pt.assignedDoctor || 'Assigned Physician',
-              departmentName: pt.department || 'Outpatient (OPD)',
-              serviceType: 'Consultation & Registration',
-              amount,
-              invoiceDate,
-              dueDate: invoiceDate,
-              paymentMethod,
-              status,
-              insuranceClaim: false,
-              insuranceProvider: 'N/A'
-            });
-          }
-        });
+    let patients = passedPatients;
+    if (!patients || !Array.isArray(patients) || patients.length === 0) {
+      const storedPatients = window.localStorage.getItem('hospital_erp_v4_patients_data') || window.localStorage.getItem('hospital_erp_patients_data');
+      if (storedPatients) {
+        patients = JSON.parse(storedPatients);
       }
     }
+    if (Array.isArray(patients)) {
+      patients.forEach((pt, index) => {
+        const invId = `INV-${pt.id || ('PAT-' + (1000 + index))}`;
+        if (!invoiceMap.has(invId) && !deletedIds.has(invId)) {
+          const rawFee = pt.consultationFee || pt.billing?.totalAmount || pt.billing?.paidAmount || '1500';
+          const amount = Number(String(rawFee).replace(/\D/g, '')) || 1500;
+          const status = (pt.paymentStatus === 'Pending' || pt.billing?.status === 'Pending') ? 'Pending' : 'Paid';
+          const paymentMethod = pt.paymentMode || pt.paymentMethod || 'Cash';
+          const invoiceDate = pt.admissionDate || pt.registeredDate || pt.date || new Date().toISOString().slice(0, 10);
+
+          invoiceMap.set(invId, {
+            id: invId,
+            patientId: pt.id || `PAT-${1000 + index}`,
+            patientName: pt.name || pt.fullName || 'Patient',
+            doctorId: pt.doctorId || 'DR-101',
+            doctorName: pt.assignedDoctor || 'Assigned Physician',
+            departmentName: pt.department || 'Outpatient (OPD)',
+            serviceType: 'Consultation & Registration',
+            amount,
+            invoiceDate,
+            dueDate: invoiceDate,
+            paymentMethod,
+            status,
+            insuranceClaim: Boolean(pt.insuranceNumber && pt.insuranceNumber !== 'N/A' && pt.insuranceNumber !== ''),
+            insuranceProvider: pt.insuranceNumber || 'N/A'
+          });
+        }
+      });
+    }
   } catch (error) {
-    console.error('Failed loading hospital_erp_patients_data for invoices', error);
+    console.error('Failed loading patients for invoices', error);
   }
 
-  // 3. Real Appointments in system (hospital_erp_appointments_data)
+  // 3. Real Appointments in system
   try {
-    const storedAppts = window.localStorage.getItem('hospital_erp_appointments_data');
-    if (storedAppts) {
-      const appts = JSON.parse(storedAppts);
-      if (Array.isArray(appts)) {
-        appts.forEach((apt, index) => {
-          const invId = `INV-${apt.id || ('APT-' + index)}`;
-          if (!invoiceMap.has(invId) && apt.patientName) {
-            const rawFee = apt.consultationFee || '1500';
-            const amount = Number(String(rawFee).replace(/\D/g, '')) || 1500;
-            const status = apt.paymentStatus === 'Pending' ? 'Pending' : 'Paid';
-            const paymentMethod = apt.paymentMode || 'Cash';
-            const invoiceDate = apt.date || new Date().toISOString().slice(0, 10);
-
-            invoiceMap.set(invId, {
-              id: invId,
-              patientId: apt.patientId || `PAT-${2000 + index}`,
-              patientName: apt.patientName,
-              doctorId: apt.doctorId || 'DR-101',
-              doctorName: apt.doctorName || apt.doctor || 'Assigned Physician',
-              departmentName: apt.department || 'Outpatient (OPD)',
-              serviceType: 'OPD Consultation',
-              amount,
-              invoiceDate,
-              dueDate: invoiceDate,
-              paymentMethod,
-              status,
-              insuranceClaim: false,
-              insuranceProvider: 'N/A'
-            });
-          }
-        });
+    let appts = passedAppts;
+    if (!appts || !Array.isArray(appts) || appts.length === 0) {
+      const storedAppts = window.localStorage.getItem('hospital_erp_v4_appointments_data') || window.localStorage.getItem('hospital_erp_appointments_data');
+      if (storedAppts) {
+        appts = JSON.parse(storedAppts);
       }
     }
+    if (Array.isArray(appts)) {
+      appts.forEach((apt, index) => {
+        const invId = `INV-${apt.id || ('APT-' + index)}`;
+        if (!invoiceMap.has(invId) && apt.patientName && !deletedIds.has(invId)) {
+          const rawFee = apt.consultationFee || '1500';
+          const amount = Number(String(rawFee).replace(/\D/g, '')) || 1500;
+          const status = apt.paymentStatus === 'Pending' ? 'Pending' : 'Paid';
+          const paymentMethod = apt.paymentMode || 'Cash';
+          const invoiceDate = apt.date || new Date().toISOString().slice(0, 10);
+
+          invoiceMap.set(invId, {
+            id: invId,
+            patientId: apt.patientId || `PAT-${2000 + index}`,
+            patientName: apt.patientName,
+            doctorId: apt.doctorId || 'DR-101',
+            doctorName: apt.doctorName || apt.doctor || 'Assigned Physician',
+            departmentName: apt.department || 'Outpatient (OPD)',
+            serviceType: 'OPD Consultation',
+            amount,
+            invoiceDate,
+            dueDate: invoiceDate,
+            paymentMethod,
+            status,
+            insuranceClaim: false,
+            insuranceProvider: 'N/A'
+          });
+        }
+      });
+    }
   } catch (error) {
-    console.error('Failed loading hospital_erp_appointments_data for invoices', error);
+    console.error('Failed loading appointments for invoices', error);
+  }
+
+  // 4. Initial Invoices fallback if invoiceMap is empty
+  if (invoiceMap.size === 0 && Array.isArray(INITIAL_INVOICES)) {
+    INITIAL_INVOICES.forEach((inv) => {
+      if (inv.id && !invoiceMap.has(inv.id) && !deletedIds.has(inv.id)) {
+        invoiceMap.set(inv.id, inv);
+      }
+    });
   }
 
   return Array.from(invoiceMap.values());
@@ -135,19 +162,27 @@ const loadLocalData = (key, fallback) => {
 };
 
 export function FinanceProvider({ children }) {
-  const [invoices, setInvoices] = useState(loadRealInvoices);
+  const data = useData();
+  const dataPatients = data?.patients || [];
+  const dataAppointments = data?.appointments || [];
+
+  const [invoices, setInvoices] = useState(() => loadRealInvoices(dataPatients, dataAppointments));
   const [expenses, setExpenses] = useState(() => loadLocalData('finance_expenses', INITIAL_EXPENSES));
   const [refunds, setRefunds] = useState(() => loadLocalData('finance_refunds', INITIAL_REFUNDS));
   const [deletedInvoice, setDeletedInvoice] = useState(null);
 
-  // Sync invoices dynamically whenever patients or appointments change in localStorage
+  // Sync invoices dynamically whenever patients or appointments change
+  useEffect(() => {
+    setInvoices(loadRealInvoices(dataPatients, dataAppointments));
+  }, [dataPatients, dataAppointments]);
+
   useEffect(() => {
     const handleStorageSync = () => {
-      setInvoices(loadRealInvoices());
+      setInvoices(loadRealInvoices(dataPatients, dataAppointments));
     };
     window.addEventListener('storage', handleStorageSync);
     return () => window.removeEventListener('storage', handleStorageSync);
-  }, []);
+  }, [dataPatients, dataAppointments]);
 
   const totalRevenue = useMemo(
     () => invoices.filter((invoice) => invoice.status === 'Paid').reduce((sum, invoice) => sum + invoice.amount, 0),
@@ -309,7 +344,7 @@ export function FinanceProvider({ children }) {
       // Also sync patient/appointment payment status if patch contains status
       if (patch.status) {
         try {
-          const storedPts = window.localStorage.getItem('hospital_erp_patients_data');
+          const storedPts = window.localStorage.getItem('hospital_erp_v4_patients_data') || window.localStorage.getItem('hospital_erp_patients_data');
           if (storedPts) {
             const pts = JSON.parse(storedPts);
             let updated = false;
@@ -330,13 +365,14 @@ export function FinanceProvider({ children }) {
               return p;
             });
             if (updated) {
+              window.localStorage.setItem('hospital_erp_v4_patients_data', JSON.stringify(nextPts));
               window.localStorage.setItem('hospital_erp_patients_data', JSON.stringify(nextPts));
             }
           }
         } catch (e) {}
 
         try {
-          const storedApts = window.localStorage.getItem('hospital_erp_appointments_data');
+          const storedApts = window.localStorage.getItem('hospital_erp_v4_appointments_data') || window.localStorage.getItem('hospital_erp_appointments_data');
           if (storedApts) {
             const apts = JSON.parse(storedApts);
             let updated = false;
@@ -349,6 +385,7 @@ export function FinanceProvider({ children }) {
               return a;
             });
             if (updated) {
+              window.localStorage.setItem('hospital_erp_v4_appointments_data', JSON.stringify(nextApts));
               window.localStorage.setItem('hospital_erp_appointments_data', JSON.stringify(nextApts));
             }
           }
@@ -367,6 +404,16 @@ export function FinanceProvider({ children }) {
       const target = prev.find((invoice) => invoice.id === id);
       setDeletedInvoice(target || null);
       window.localStorage.setItem('finance_invoices', JSON.stringify(next));
+
+      try {
+        const savedDeleted = window.localStorage.getItem('finance_deleted_invoices');
+        const deletedArr = savedDeleted ? JSON.parse(savedDeleted) : [];
+        if (!deletedArr.includes(id)) {
+          deletedArr.push(id);
+          window.localStorage.setItem('finance_deleted_invoices', JSON.stringify(deletedArr));
+        }
+      } catch (e) {}
+
       return next;
     });
   };
@@ -435,9 +482,16 @@ export function FinanceProvider({ children }) {
 
   const undoDelete = () => {
     if (!deletedInvoice) return;
+    const restoredId = deletedInvoice.id;
     setInvoices((prev) => {
       const next = [deletedInvoice, ...prev];
       window.localStorage.setItem('finance_invoices', JSON.stringify(next));
+      try {
+        const savedDeleted = window.localStorage.getItem('finance_deleted_invoices');
+        const deletedArr = savedDeleted ? JSON.parse(savedDeleted) : [];
+        const nextDeleted = deletedArr.filter((id) => id !== restoredId);
+        window.localStorage.setItem('finance_deleted_invoices', JSON.stringify(nextDeleted));
+      } catch (e) {}
       return next;
     });
     setDeletedInvoice(null);

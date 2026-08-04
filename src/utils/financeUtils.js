@@ -29,27 +29,32 @@ export const getRecentDateLabel = (dateString) => {
 };
 
 export const filterByDateRange = (items, range) => {
-  if (!range || range === 'All') return items;
+  if (!range || range === 'All' || !Array.isArray(items)) return items;
   const now = new Date();
-  const start = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+
   if (range === 'Today') {
-    return items.filter((item) => item.invoiceDate === now.toISOString().slice(0, 10));
+    return items.filter((item) => String(item?.invoiceDate || item?.date || '').slice(0, 10) === todayStr);
   }
   if (range === 'Yesterday') {
-    start.setDate(now.getDate() - 1);
-    return items.filter((item) => item.invoiceDate === start.toISOString().slice(0, 10));
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yestStr = yesterday.toISOString().slice(0, 10);
+    return items.filter((item) => String(item?.invoiceDate || item?.date || '').slice(0, 10) === yestStr);
   }
   if (range === 'This Week') {
-    const first = new Date(now.setDate(now.getDate() - now.getDay()));
-    return items.filter((item) => new Date(item.invoiceDate) >= first);
+    const first = new Date(now);
+    first.setDate(now.getDate() - now.getDay());
+    const firstStr = first.toISOString().slice(0, 10);
+    return items.filter((item) => String(item?.invoiceDate || item?.date || '').slice(0, 10) >= firstStr);
   }
   if (range === 'This Month') {
-    const first = new Date(now.getFullYear(), now.getMonth(), 1);
-    return items.filter((item) => new Date(item.invoiceDate) >= first);
+    const monthStr = todayStr.slice(0, 7);
+    return items.filter((item) => String(item?.invoiceDate || item?.date || '').slice(0, 7) === monthStr);
   }
   if (range === 'This Year') {
-    const first = new Date(now.getFullYear(), 0, 1);
-    return items.filter((item) => new Date(item.invoiceDate) >= first);
+    const yearStr = todayStr.slice(0, 4);
+    return items.filter((item) => String(item?.invoiceDate || item?.date || '').slice(0, 4) === yearStr);
   }
   return items;
 };
