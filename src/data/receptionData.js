@@ -17,6 +17,64 @@ export const departments = [
 
 export const patients = [];
 
-export const appointments = [];
+export const appointments = [
+  {
+    id: 'APT-001',
+    patientId: 'PAT-1001',
+    patientName: 'Muhammad Usman',
+    doctorId: 'DOC-008',
+    doctorName: 'Dr. Amir Khan',
+    department: 'Cardiology',
+    date: '2026-08-04',
+    time: '09:30',
+    status: 'Confirmed'
+  },
+  {
+    id: 'APT-002',
+    patientId: 'PAT-1002',
+    patientName: 'Ayesha Bibi',
+    doctorId: 'DOC-008',
+    doctorName: 'Dr. Amir Khan',
+    department: 'Cardiology',
+    date: '2026-08-04',
+    time: '10:15',
+    status: 'Completed'
+  },
+  {
+    id: 'APT-003',
+    patientId: 'PAT-1003',
+    patientName: 'Zainab Ahmed',
+    doctorId: 'DOC-004',
+    doctorName: 'Dr. Fatima Iqbal',
+    department: 'Pharmacy',
+    date: '2026-08-04',
+    time: '11:00',
+    status: 'Confirmed'
+  },
+  {
+    id: 'APT-004',
+    patientId: 'PAT-1004',
+    patientName: 'Hamza Malik',
+    doctorId: 'DOC-010',
+    doctorName: 'Dr. Hina Baig',
+    department: 'Cardiology',
+    date: '2026-08-04',
+    time: '11:45',
+    status: 'Confirmed'
+  }
+];
 
-export const queueRecords = [];
+export const queueRecords = [
+  {
+    id: 'Q-001',
+    tokenNumber: 'T-101',
+    appointmentId: 'APT-001',
+    patientId: 'PAT-1001',
+    patientName: 'Muhammad Usman',
+    doctorId: 'DOC-008',
+    doctorName: 'Dr. Amir Khan',
+    department: 'Cardiology',
+    status: 'Waiting',
+    arrivalTime: '09:15'
+  }
+];

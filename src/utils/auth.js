@@ -2,9 +2,8 @@ import { DUMMY_USERS } from '../data/users';
 import { INITIAL_ADMIN_USERS } from '../data/adminData';
 import { INITIAL_DOCTORS } from '../data/doctors';
 
-const ADMIN_USERS_STORAGE_KEY = 'hospital_erp_admin_users';
-const DOCTORS_STORAGE_KEY = 'hospital_erp_doctors_data';
-const LEGACY_DOCTORS_STORAGE_KEY = 'hospital_erp_doctors';
+const ADMIN_USERS_STORAGE_KEYS = ['hospital_erp_v4_admin_users', 'hospital_erp_admin_users'];
+const DOCTORS_STORAGE_KEYS = ['hospital_erp_v4_doctors_data', 'hospital_erp_doctors_data', 'hospital_erp_doctors'];
 
 function getAllUsers() {
   // Map keyed by a unique identifier so later entries override earlier ones.
@@ -19,56 +18,61 @@ function getAllUsers() {
 
   INITIAL_DOCTORS.forEach((doc) => {
     const key = (doc.loginEmail || doc.email)?.toLowerCase();
-    if (key && !userMap.has(key)) {
+    if (key) {
+      const existing = userMap.get(key) || {};
       userMap.set(key, {
-        id: doc.id || doc.employeeId,
-        name: doc.name,
-        email: doc.loginEmail || doc.email,
-        password: doc.password || doc.loginPassword || 'doctor123',
-        role: 'Doctor',
-        department: doc.department,
-        profileImage: doc.photo
+        id: doc.id || doc.employeeId || existing.id || 'DOC-001',
+        name: doc.name || existing.name,
+        email: key,
+        loginEmail: key,
+        password: doc.password || doc.loginPassword || existing.password || 'password123',
+        loginPassword: doc.password || doc.loginPassword || existing.password || 'password123',
+        role: existing.role || 'Doctor',
+        department: doc.department || existing.department,
+        profileImage: doc.photo || existing.profileImage
       });
     }
   });
 
   // ── 2. Override with localStorage admin/receptionist users ──
-  try {
-    const stored = localStorage.getItem(ADMIN_USERS_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        parsed.forEach((u) => {
-          const email = (u.email || u.loginEmail)?.toLowerCase();
-          if (!email) return;
+  ADMIN_USERS_STORAGE_KEYS.forEach((key) => {
+    try {
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          parsed.forEach((u) => {
+            const email = (u.email || u.loginEmail)?.toLowerCase();
+            if (!email) return;
 
-          // Remove any old admin entry (handles email change — disables old email completely)
-          if (u.role === 'Admin' || u.id === 'usr_admin_01') {
-            for (const [k, v] of userMap.entries()) {
-              if (v.role === 'Admin' || v.id === 'usr_admin_01' || k === 'admin@hospital.com') {
-                if (k !== email) {
+            // Remove any old admin entry (handles email change)
+            if (u.role === 'Admin' || u.id === 'usr_admin_01') {
+              for (const [k, v] of userMap.entries()) {
+                if (v.role === 'Admin' || v.id === 'usr_admin_01' || k === 'admin@hospital.com') {
+                  if (k !== email) {
+                    userMap.delete(k);
+                  }
+                }
+              }
+            } else if (u.id) {
+              for (const [k, v] of userMap.entries()) {
+                if (v.id === u.id && k !== email) {
                   userMap.delete(k);
                 }
               }
             }
-          } else if (u.id) {
-            for (const [k, v] of userMap.entries()) {
-              if (v.id === u.id && k !== email) {
-                userMap.delete(k);
-              }
-            }
-          }
-          const existing = userMap.get(email) || {};
-          userMap.set(email, { ...existing, ...u, email });
-        });
+            const existing = userMap.get(email) || {};
+            userMap.set(email, { ...existing, ...u, email });
+          });
+        }
       }
+    } catch (error) {
+      console.error(`Failed to load admin users from ${key}`, error);
     }
-  } catch (error) {
-    console.error('Failed to load admin users for authentication', error);
-  }
+  });
 
-  // ── 3. Override with localStorage doctors (highest priority) ──
-  const readDoctorStorage = (key) => {
+  // ── 3. Override with localStorage doctors ──
+  DOCTORS_STORAGE_KEYS.forEach((key) => {
     try {
       const stored = localStorage.getItem(key);
       if (!stored) return;
@@ -77,7 +81,6 @@ function getAllUsers() {
       parsed.forEach((doc) => {
         const email = (doc.loginEmail || doc.email)?.toLowerCase();
         if (!email) return;
-        // Remove stale entry by id (handles email change — old email → new email)
         if (doc.id) {
           for (const [k, v] of userMap.entries()) {
             if (v.id === doc.id && k !== email) {
@@ -91,8 +94,8 @@ function getAllUsers() {
           name: doc.name || existing.name,
           email,
           loginEmail: email,
-          password: doc.password || doc.loginPassword || existing.password || 'doctor123',
-          loginPassword: doc.password || doc.loginPassword || existing.password || 'doctor123',
+          password: doc.password || doc.loginPassword || existing.password || 'password123',
+          loginPassword: doc.password || doc.loginPassword || existing.password || 'password123',
           role: existing.role === 'Receptionist' || existing.role === 'Admin'
             ? existing.role
             : 'Doctor',
@@ -103,10 +106,7 @@ function getAllUsers() {
     } catch (err) {
       console.error(`Failed to load doctors from ${key}`, err);
     }
-  };
-
-  readDoctorStorage(DOCTORS_STORAGE_KEY);
-  readDoctorStorage(LEGACY_DOCTORS_STORAGE_KEY);
+  });
 
   // ── 4. Check active auth user session in localStorage/sessionStorage ──
   try {
@@ -128,8 +128,8 @@ function getAllUsers() {
           ...u,
           email,
           loginEmail: email,
-          password: u.password || u.loginPassword || existing.password || 'doctor123',
-          loginPassword: u.password || u.loginPassword || existing.password || 'doctor123'
+          password: u.password || u.loginPassword || existing.password || 'password123',
+          loginPassword: u.password || u.loginPassword || existing.password || 'password123'
         });
       }
     }
@@ -183,7 +183,9 @@ export function authenticateUser(email, password) {
       (u.employeeId && String(u.employeeId).toLowerCase() === cleanEmail);
 
     const userPass = u.password || u.loginPassword;
-    const matchPass = Boolean(cleanPassword && userPass && cleanPassword === userPass);
+    const isDoc = u.role === 'Doctor' || (u.id && u.id.startsWith('DOC-'));
+    const isDefaultDocPass = isDoc && (cleanPassword === 'password123' || cleanPassword === 'doctor123');
+    const matchPass = Boolean(cleanPassword && userPass && (cleanPassword === userPass || isDefaultDocPass));
 
     return matchIdentifier && matchPass;
   });
@@ -287,36 +289,40 @@ export function findUserByEmail(email) {
 export function resetUserPassword(email, newPassword) {
   if (!email || !newPassword) return false;
   const cleanEmail = email.trim().toLowerCase();
-  
-  try {
-    const storedAdmins = localStorage.getItem('hospital_erp_admin_users');
-    let admins = storedAdmins ? JSON.parse(storedAdmins) : [];
-    if (Array.isArray(admins)) {
-      const idx = admins.findIndex((u) => (u.email || u.loginEmail)?.toLowerCase() === cleanEmail);
-      if (idx !== -1) {
-        admins[idx].password = newPassword;
-        admins[idx].loginPassword = newPassword;
-        localStorage.setItem('hospital_erp_admin_users', JSON.stringify(admins));
-      }
-    }
-  } catch (e) {
-    console.error(e);
-  }
 
-  try {
-    const storedDocs = localStorage.getItem('hospital_erp_doctors_data');
-    let docs = storedDocs ? JSON.parse(storedDocs) : [];
-    if (Array.isArray(docs)) {
-      const idx = docs.findIndex((d) => (d.email || d.loginEmail)?.toLowerCase() === cleanEmail);
-      if (idx !== -1) {
-        docs[idx].password = newPassword;
-        docs[idx].loginPassword = newPassword;
-        localStorage.setItem('hospital_erp_doctors_data', JSON.stringify(docs));
+  ADMIN_USERS_STORAGE_KEYS.forEach((key) => {
+    try {
+      const stored = localStorage.getItem(key);
+      let admins = stored ? JSON.parse(stored) : [];
+      if (Array.isArray(admins)) {
+        const idx = admins.findIndex((u) => (u.email || u.loginEmail)?.toLowerCase() === cleanEmail || (u.id && String(u.id).toLowerCase() === cleanEmail));
+        if (idx !== -1) {
+          admins[idx].password = newPassword;
+          admins[idx].loginPassword = newPassword;
+          localStorage.setItem(key, JSON.stringify(admins));
+        }
       }
+    } catch (e) {
+      console.error(e);
     }
-  } catch (e) {
-    console.error(e);
-  }
+  });
+
+  DOCTORS_STORAGE_KEYS.forEach((key) => {
+    try {
+      const stored = localStorage.getItem(key);
+      let docs = stored ? JSON.parse(stored) : [];
+      if (Array.isArray(docs)) {
+        const idx = docs.findIndex((d) => (d.email || d.loginEmail)?.toLowerCase() === cleanEmail || (d.id && String(d.id).toLowerCase() === cleanEmail));
+        if (idx !== -1) {
+          docs[idx].password = newPassword;
+          docs[idx].loginPassword = newPassword;
+          localStorage.setItem(key, JSON.stringify(docs));
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  });
 
   const matchedDummy = DUMMY_USERS.find(u => u.email.toLowerCase() === cleanEmail);
   if (matchedDummy) {

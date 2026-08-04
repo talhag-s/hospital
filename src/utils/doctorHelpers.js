@@ -242,15 +242,15 @@ export const isPatientForDoctor = (patient, currentDoctor, user, doctorAppointme
   };
   if (docId && legacyMap[docId] && patient.doctorId === legacyMap[docId]) return true;
 
-  // 2. Match by patient.assignedDoctor or patient.doctor
-  const assignedClean = (patient.assignedDoctor || patient.doctor || '').toLowerCase().replace(/^dr\.\s*/i, '').trim();
+  // 2. Match by patient.assignedDoctor or patient.doctor or patient.admittedBy
+  const assignedClean = (patient.assignedDoctor || patient.doctor || patient.admittedBy || '').toLowerCase().replace(/^dr\.\s*/i, '').trim();
   if (docNameClean && assignedClean && (docNameClean === assignedClean || docNameClean.includes(assignedClean) || assignedClean.includes(docNameClean))) {
     return true;
   }
 
   // 3. Match if patient exists in doctor's appointments
   const patientNameClean = (patient.name || patient.fullName || '').toLowerCase().trim();
-  const matchApt = doctorAppointments.some((a) => {
+  const matchApt = (doctorAppointments || []).some((a) => {
     if (a.patientId && patient.id && a.patientId === patient.id) return true;
     const aptPNameClean = (a.patientName || '').toLowerCase().trim();
     return patientNameClean && aptPNameClean && (patientNameClean === aptPNameClean || patientNameClean.includes(aptPNameClean) || aptPNameClean.includes(patientNameClean));

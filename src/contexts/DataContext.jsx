@@ -111,9 +111,9 @@ export function DataProvider({ children }) {
       })
       .map(d => {
         if (!d) return d;
-        const namePart = String(d.name || 'doctor').toLowerCase().replace(/^dr\.\s*/i, '').trim().split(' ')[0] || 'doctor';
-        const email = `${namePart}@gmail.com`;
-        return { ...d, email, loginEmail: email };
+        const existingEmail = (d.email || d.loginEmail || '').trim().toLowerCase();
+        const email = existingEmail || `${String(d.name || 'doctor').toLowerCase().replace(/^dr\.\s*/i, '').trim().split(' ')[0]}@gmail.com`;
+        return { ...d, email, loginEmail: email, password: d.password || d.loginPassword || 'password123' };
       });
   });
   const [wards, setWards] = useState(() => safeRead(DATA_KEYS.WARDS, WARDS_DATA));
@@ -197,7 +197,10 @@ export function DataProvider({ children }) {
   // Persist on change
   useEffect(() => { safeWrite(DATA_KEYS.PATIENTS, patients); }, [patients]);
   useEffect(() => { safeWrite(DATA_KEYS.APPOINTMENTS, appointments); }, [appointments]);
-  useEffect(() => { safeWrite(DATA_KEYS.DOCTORS, doctors); }, [doctors]);
+  useEffect(() => {
+    safeWrite(DATA_KEYS.DOCTORS, doctors);
+    safeWrite('hospital_erp_doctors_data', doctors);
+  }, [doctors]);
   useEffect(() => { safeWrite(DATA_KEYS.WARDS, wards); }, [wards]);
   useEffect(() => { safeWrite(DATA_KEYS.THEATERS, theaters); }, [theaters]);
   useEffect(() => { safeWrite(DATA_KEYS.DEPARTMENTS, departments); }, [departments]);

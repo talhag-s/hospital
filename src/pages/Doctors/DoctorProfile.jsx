@@ -1,16 +1,29 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, AlertCircle, Users, Calendar } from 'lucide-react';
 import { INITIAL_DOCTORS } from '../../data/doctors';
 import DoctorProfileCard from '../../components/doctors/DoctorProfileCard';
 import ScheduleCard from '../../components/doctors/ScheduleCard';
 import { useData } from '../../contexts/DataContext';
+import { isPatientForDoctor, isAppointmentForDoctor } from '../../utils/doctorHelpers';
 
 export default function DoctorProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { doctors } = useData();
+  const { doctors, patients = [], appointments = [] } = useData();
   const doctor = (doctors || INITIAL_DOCTORS).find(d => d.id === id);
+
+  const docAppointments = useMemo(() => {
+    if (!doctor) return [];
+    return appointments.filter(a => isAppointmentForDoctor(a, doctor, null));
+  }, [appointments, doctor]);
+
+  const assignedPatients = useMemo(() => {
+    if (!doctor) return [];
+    const matched = patients.filter(p => isPatientForDoctor(p, doctor, null, docAppointments));
+    if (matched.length > 0) return matched;
+    return doctor.patients || [];
+  }, [patients, doctor, docAppointments]);
 
   if (!doctor) {
     return (
@@ -25,7 +38,7 @@ export default function DoctorProfile() {
     );
   }
 
-  const recentPatients = (doctor.patients || []).slice(0, 5);
+  const recentPatients = assignedPatients.slice(0, 5);
 
   return (
     <div className="min-h-screen bg-slate-50/80 py-8 px-4 sm:px-6 lg:px-8">
@@ -59,23 +72,23 @@ export default function DoctorProfile() {
 
         <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-200">
           <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2 border-l-4 border-emerald-500 pl-3">
-            <Users className="w-4 h-4" /> Recent Patients ({recentPatients.length})
+            <Users className="w-4 h-4" /> Recent Patients ({assignedPatients.length})
           </h3>
           <div className="space-y-2">
             {recentPatients.length > 0 ? (
               recentPatients.map((patient, idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50">
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-gray-900 text-sm">{patient.name}</div>
-                    <div className="text-xs text-gray-500 mt-0.5">{patient.diagnosis} • Age {patient.age}</div>
+                    <div className="font-semibold text-gray-900 text-sm">{patient.name || patient.fullName}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">{patient.diagnosis || 'General Checkup'} • Age {patient.age || 30} • {patient.phone || patient.phoneNumber || 'No phone'}</div>
                   </div>
                   <span className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ml-2 ${
                     patient.status === 'Admitted' ? 'bg-red-100 text-red-700' :
-                    patient.status === 'OPD' ? 'bg-blue-100 text-blue-700' :
+                    patient.status === 'OPD' || patient.status === 'Outpatient' ? 'bg-blue-100 text-blue-700' :
                     patient.status === 'Discharged' ? 'bg-green-100 text-green-700' :
                     'bg-gray-100 text-gray-700'
                   }`}>
-                    {patient.status}
+                    {patient.status || 'Outpatient'}
                   </span>
                 </div>
               ))
