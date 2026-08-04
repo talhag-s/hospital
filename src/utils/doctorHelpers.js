@@ -244,7 +244,7 @@ export const isPatientForDoctor = (patient, currentDoctor, user, doctorAppointme
     return true;
   }
 
-  // 3. Default scope ('assigned'): Doctor sees only assigned/treated patients
+  // 3. Default scope ('assigned'): Doctor sees ONLY explicitly assigned patients
   const docId = (currentDoctor?.id || user?.id || '').toLowerCase().trim();
   const docNameClean = (currentDoctor?.name || user?.name || '').toLowerCase().replace(/^dr\.\s*/i, '').trim();
 
@@ -259,7 +259,7 @@ export const isPatientForDoctor = (patient, currentDoctor, user, doctorAppointme
     if (legacyMap[docId] === pDocId || legacyMap[pDocId] === docId) return true;
   }
 
-  // 2. Match by patient.assignedDoctor or patient.doctor or patient.admittedBy or patient.admissionDetails.admittedBy
+  // 2. Match by patient.assignedDoctor / doctor / admittedBy
   const assignedStr = (
     patient.assignedDoctor ||
     patient.doctor ||
@@ -272,10 +272,6 @@ export const isPatientForDoctor = (patient, currentDoctor, user, doctorAppointme
     if (docNameClean === assignedStr || docNameClean.includes(assignedStr) || assignedStr.includes(docNameClean)) {
       return true;
     }
-    const docParts = docNameClean.split(/\s+/).filter(p => p.length > 2);
-    if (docParts.some(part => assignedStr.includes(part))) {
-      return true;
-    }
   }
 
   // 3. Match if patient exists in doctor's appointments
@@ -285,19 +281,10 @@ export const isPatientForDoctor = (patient, currentDoctor, user, doctorAppointme
   const matchApt = (doctorAppointments || []).some((a) => {
     if (patientId && a.patientId && a.patientId.toLowerCase().trim() === patientId) return true;
     const aptPNameClean = (a.patientName || '').toLowerCase().trim();
-    return patientNameClean && aptPNameClean && (patientNameClean === aptPNameClean || patientNameClean.includes(aptPNameClean) || aptPNameClean.includes(patientNameClean));
+    return patientNameClean && aptPNameClean && patientNameClean === aptPNameClean;
   });
 
   if (matchApt) return true;
-
-  // 4. Department fallback: If patient has department matching doctor's department and has no other doctor assigned
-  const patientDept = (patient.department || patient.departmentId || '').toLowerCase().trim();
-  const docDept = (currentDoctor?.department || currentDoctor?.departmentId || user?.department || '').toLowerCase().trim();
-  const hasUnassignedDoctor = !patient.doctorId && (!patient.assignedDoctor || patient.assignedDoctor === 'Assigned Doctor');
-
-  if (hasUnassignedDoctor && patientDept && docDept && (patientDept === docDept || patientDept.includes(docDept) || docDept.includes(patientDept))) {
-    return true;
-  }
 
   return false;
 };
