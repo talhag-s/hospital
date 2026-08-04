@@ -143,7 +143,7 @@ export default function DoctorDashboard() {
                 </span>
                 {currentDoctor.patientAccessScope === 'all' || currentDoctor.canViewAllPatients ? (
                   <span className="text-xs bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full font-bold">
-                    ✓ Can Show All 4 Patients
+                    ✓ Can Show All {patients.length} Patients
                   </span>
                 ) : currentDoctor.patientAccessScope === 'none' || currentDoctor.showZeroPatients ? (
                   <span className="text-xs bg-rose-50 text-rose-800 border border-rose-300 px-2.5 py-0.5 rounded-full font-bold">

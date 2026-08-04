@@ -63,8 +63,8 @@ export const INITIAL_DOCTORS = [
     joiningDate: '2015-04-10',
     availability: 'Available',
     status: 'Active',
-    patientAccessScope: 'all', // Permission: Can view all 4 patients in the system
-    canViewAllPatients: true,
+    patientAccessScope: 'assigned',
+    canViewAllPatients: false,
     showZeroPatients: false,
     emergencyContact: 'Tariq Khan',
     emergencyPhone: '+92-300-9988776',
@@ -92,9 +92,9 @@ export const INITIAL_DOCTORS = [
     joiningDate: '2016-05-10',
     availability: 'Available',
     status: 'Active',
-    patientAccessScope: 'none', // Permission: Can view 0 patients (restricted)
+    patientAccessScope: 'assigned',
     canViewAllPatients: false,
-    showZeroPatients: true,
+    showZeroPatients: false,
     emergencyContact: 'Zahid Iqbal',
     emergencyPhone: '+92-301-9988776',
     schedule: generateSchedule(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], '09:00', '17:00'),

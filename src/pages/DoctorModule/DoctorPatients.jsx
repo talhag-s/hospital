@@ -72,7 +72,7 @@ export default function DoctorPatients() {
         <div className="flex flex-wrap items-center gap-2">
           {currentDoctor.patientAccessScope === 'all' || currentDoctor.canViewAllPatients ? (
             <span className="bg-emerald-50 border border-emerald-300 px-3 py-1.5 rounded-xl text-emerald-800 text-xs font-bold shadow-2xs">
-              ✓ Full Access: Showing All 4 System Patients
+              ✓ Full Access: Showing All {patients.length} System Patients
             </span>
           ) : currentDoctor.patientAccessScope === 'none' || currentDoctor.showZeroPatients ? (
             <span className="bg-rose-50 border border-rose-300 px-3 py-1.5 rounded-xl text-rose-800 text-xs font-bold shadow-2xs">
