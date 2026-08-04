@@ -229,25 +229,6 @@ const DoctorForm = ({ initialData, onSubmit, onCancel, isEdit = false }) => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {renderSelect('availability', 'Availability', ['Available', 'Busy', 'On-Leave'])}
-          <div>
-            <label htmlFor="patientAccessScope" className={labelCls}>
-              Patient Access Permission Scope <span className="text-red-500 ml-1">*</span>
-            </label>
-            <select
-              id="patientAccessScope"
-              name="patientAccessScope"
-              value={formData.patientAccessScope || 'assigned'}
-              onChange={handleChange}
-              className={inputCls}
-            >
-              <option value="all">Can Show All 4 Patients (Full Access)</option>
-              <option value="assigned">Can Show Assigned Patients Only (2 Patients)</option>
-              <option value="none">Can Show 0 Patients (Restricted / Hidden)</option>
-            </select>
-            <p className="text-[11px] text-gray-500 mt-1">
-              Controls whether this doctor can view all patients in system, only their assigned patients, or zero patients.
-            </p>
-          </div>
         </div>
         <div className="mb-6">
           <label className={labelCls}>Working Days</label>
