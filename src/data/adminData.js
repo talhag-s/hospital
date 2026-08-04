@@ -192,6 +192,21 @@ export const INITIAL_DOCTORS_STAFF = [
     patientsCount: 620,
     email: 'imran@gmail.com',
     avatar: 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=300'
+  },
+  {
+    id: 'DOC-008',
+    name: 'Dr. Amir Khan',
+    department: 'Cardiology',
+    specialization: 'Cardiologist',
+    qualification: 'MBBS, FCPS',
+    shift: 'Morning',
+    consultationFee: 'Rs 180',
+    experience: '12 Years',
+    status: 'On Duty',
+    rating: 4.9,
+    patientsCount: 410,
+    email: 'amir@gmail.com',
+    avatar: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=300'
   }
 ];
 // ---- FINANCIAL SUMMARY LOGS ----

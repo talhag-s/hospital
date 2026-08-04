@@ -148,7 +148,7 @@ export default function DoctorList() {
               <option value="All">All Availability</option>
               <option value="Available">Available</option>
               <option value="Busy">Busy</option>
-              <option value="On-Leave">On-Leave</option>
+              <option value="On Leave">On Leave</option>
             </select>
             <select value={filters.status} onChange={e => handleFilter('status', e.target.value)} className={selectCls}>
               <option value="All">All Status</option>

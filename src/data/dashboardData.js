@@ -156,34 +156,14 @@ export const bedOccupancyByWard = [
 ];
 
 // ---- TODAY'S APPOINTMENTS ----
-export const todaysAppointments = [
-  { id: 'APT-001', patient: 'James Carter', doctor: 'Dr. Alexander Wright', dept: 'Cardiology', time: '09:00 AM', status: 'Completed', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=80' },
-  { id: 'APT-002', patient: 'Sofia Martinez', doctor: 'Dr. Sarah Jenkins', dept: 'Neurology', time: '09:30 AM', status: 'Completed', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=80' },
-  { id: 'APT-003', patient: 'Robert Kim', doctor: 'Dr. Emily Chen', dept: 'Orthopedics', time: '10:00 AM', status: 'Pending', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=80' },
-  { id: 'APT-004', patient: 'Priya Sharma', doctor: 'Dr. Alexander Wright', dept: 'Cardiology', time: '10:30 AM', status: 'Pending', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=80' },
-  { id: 'APT-005', patient: 'David Nguyen', doctor: 'Dr. Michael Torres', dept: 'Pediatrics', time: '11:00 AM', status: 'Cancelled', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=80' },
-  { id: 'APT-006', patient: 'Emma Wilson', doctor: 'Dr. Sarah Jenkins', dept: 'Gynecology', time: '11:30 AM', status: 'Pending', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=80' },
-  { id: 'APT-007', patient: 'Ahmed Hassan', doctor: 'Dr. Robert Vance', dept: 'Urology', time: '12:00 PM', status: 'Pending', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=80' },
-  { id: 'APT-008', patient: 'Linda Park', doctor: 'Dr. Emily Chen', dept: 'Dermatology', time: '02:00 PM', status: 'Pending', avatar: 'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?auto=format&fit=crop&q=80&w=80' }
-];
+export const todaysAppointments = [];
 
 // ---- RECENTLY REGISTERED PATIENTS ----
-export const recentPatients = [
-  { id: 'PAT-8842', name: 'Eleanor Vance', age: 34, gender: 'Female', dept: 'Cardiology', status: 'Admitted', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=80', registeredAt: '2 hrs ago' },
-  { id: 'PAT-8841', name: 'Marcus Webb', age: 52, gender: 'Male', dept: 'Orthopedics', status: 'OPD', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=80', registeredAt: '4 hrs ago' },
-  { id: 'PAT-8840', name: 'Aria Patel', age: 28, gender: 'Female', dept: 'Maternity', status: 'Admitted', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=80', registeredAt: '5 hrs ago' },
-  { id: 'PAT-8839', name: 'Jason Brooks', age: 67, gender: 'Male', dept: 'Neurology', status: 'ICU', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=80', registeredAt: '7 hrs ago' },
-  { id: 'PAT-8838', name: 'Chloe Zhang', age: 19, gender: 'Female', dept: 'Pediatrics', status: 'Discharged', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=80', registeredAt: '9 hrs ago' }
-];
+export const recentPatients = [];
 
 // ---- RECENT ACTIVITY TIMELINE ----
 export const recentActivities = [
-  { id: 1, type: 'doctor', action: 'New doctor Dr. Emily Chen added to Dermatology dept.', actor: 'Admin', time: '08:14 AM', color: 'blue' },
-  { id: 2, type: 'appointment', action: 'Appointment booked: James Carter with Dr. Alexander Wright.', actor: 'Reception', time: '09:02 AM', color: 'violet' },
-  { id: 3, type: 'patient', action: 'Patient Eleanor Vance (#PAT-8842) admitted to Cardiology Ward.', actor: 'Dr. Wright', time: '10:30 AM', color: 'emerald' },
-  { id: 4, type: 'invoice', action: 'Invoice #INV-2024-1192 generated for Rs 1,840 — Patient Marcus Webb.', actor: 'Billing', time: '11:45 AM', color: 'amber' },
-  { id: 5, type: 'pharmacy', action: 'Batch purchase of Amoxicillin 500mg x500 units received.', actor: 'Pharmacy', time: '01:10 PM', color: 'purple' },
-  { id: 6, type: 'lab', action: 'CBC & Lipid Panel report finalized for Jason Brooks.', actor: 'Dr. Vance', time: '02:35 PM', color: 'cyan' }
+  { id: 1, type: 'system', action: 'Hospital ERP System initialized.', actor: 'System', time: '08:00 AM', color: 'blue' }
 ];
 
 

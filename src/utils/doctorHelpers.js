@@ -9,8 +9,10 @@ export const filterDoctors = (doctors, filters) => {
       doctor.specialization.toLowerCase().includes(filters.search.toLowerCase());
 
     const matchDept = filters.department === 'All' || doctor.department === filters.department;
-    const matchAvail = filters.availability === 'All' || doctor.availability === filters.availability;
-    const matchStatus = filters.status === 'All' || doctor.status === filters.status;
+
+    const norm = (str) => String(str || '').replace('-', ' ').toLowerCase();
+    const matchAvail = filters.availability === 'All' || norm(doctor.availability) === norm(filters.availability);
+    const matchStatus = filters.status === 'All' || norm(doctor.status) === norm(filters.status);
 
     return matchSearch && matchDept && matchAvail && matchStatus;
   });

@@ -6,15 +6,15 @@ import { WARDS_DATA, OPERATING_THEATERS, INITIAL_DEPARTMENTS, INITIAL_ADMIN_USER
 import { sanitizePatientBeds, getAvailableBedNumber } from '../utils/patientHelpers';
 
 const DATA_KEYS = {
-  PATIENTS: 'hospital_erp_patients_data',
-  APPOINTMENTS: 'hospital_erp_appointments_data',
-  DOCTORS: 'hospital_erp_doctors_data',
-  DEPARTMENTS: 'hospital_erp_departments_data',
-  USERS: 'hospital_erp_admin_users',
-  QUEUE: 'hospital_erp_queue_data',
-  WARDS: 'hospital_erp_wards_data',
-  THEATERS: 'hospital_erp_theaters_data',
-  SETTINGS: 'hospital_erp_system_settings'
+  PATIENTS: 'hospital_erp_v4_patients_data',
+  APPOINTMENTS: 'hospital_erp_v4_appointments_data',
+  DOCTORS: 'hospital_erp_v4_doctors_data',
+  DEPARTMENTS: 'hospital_erp_v4_departments_data',
+  USERS: 'hospital_erp_v4_admin_users',
+  QUEUE: 'hospital_erp_v4_queue_data',
+  WARDS: 'hospital_erp_v4_wards_data',
+  THEATERS: 'hospital_erp_v4_theaters_data',
+  SETTINGS: 'hospital_erp_v4_system_settings'
 };
 
 const INITIAL_SYSTEM_SETTINGS = {
@@ -549,6 +549,22 @@ export function DataProvider({ children }) {
 
   const removeQueueRecord = (id) => { setQueue((prev) => prev.filter((r) => r.id !== id)); };
 
+  const resetToDefaultData = () => {
+    setPatients(sanitizePatientBeds(INITIAL_PATIENTS, INITIAL_DEPARTMENTS));
+    setDoctors(INITIAL_DOCTORS);
+    setDepartments(INITIAL_DEPARTMENTS.map(normalizeDepartment));
+    setAppointments(INITIAL_APPOINTMENTS);
+    setQueue(INITIAL_QUEUE_RECORDS);
+    setWards(WARDS_DATA);
+    setTheaters(OPERATING_THEATERS);
+    setUsers(INITIAL_ADMIN_USERS);
+    safeWrite(DATA_KEYS.PATIENTS, INITIAL_PATIENTS);
+    safeWrite(DATA_KEYS.DOCTORS, INITIAL_DOCTORS);
+    safeWrite(DATA_KEYS.DEPARTMENTS, INITIAL_DEPARTMENTS);
+    safeWrite(DATA_KEYS.APPOINTMENTS, INITIAL_APPOINTMENTS);
+    safeWrite(DATA_KEYS.QUEUE, INITIAL_QUEUE_RECORDS);
+  };
+
   return (
     <DataContext.Provider
       value={{
@@ -587,7 +603,8 @@ export function DataProvider({ children }) {
         addQueueRecord,
         updateQueueRecord,
         removeQueueRecord,
-        updateSettings
+        updateSettings,
+        resetToDefaultData
       }}
     >
       {children}

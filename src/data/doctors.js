@@ -35,20 +35,7 @@ const generateSchedule = (days, start = '08:00', end = '16:00') => {
   }));
 };
 
-const generatePatients = (doctorId) => {
-  const names = ['Ahmed Hassan', 'Sara Malik', 'Imran Khan', 'Fatima Zahra', 'Bilal Ahmed'];
-  const diagnoses = ['Hypertension', 'Diabetes Type 2', 'Pneumonia', 'Arthritis', 'Asthma'];
-  const statuses = ['Admitted', 'OPD', 'Discharged', 'Follow-up'];
-  return names.map((name, i) => ({
-    id: `PAT-${1000 + i + Math.floor(Math.random() * 100)}`,
-    name,
-    age: Math.floor(Math.random() * 50) + 20,
-    gender: i % 2 === 0 ? 'Male' : 'Female',
-    appointmentDate: `2026-07-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
-    diagnosis: diagnoses[i],
-    status: statuses[i % statuses.length],
-  }));
-};
+const generatePatients = (doctorId) => [];
 
 export const INITIAL_DOCTORS = [
   {
