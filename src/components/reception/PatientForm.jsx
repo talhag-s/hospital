@@ -166,8 +166,10 @@ export default function PatientForm({ initialData, autoId, onSave, onSubmit, onC
 
     const pName = form.fullName || form.name || 'Unnamed Patient';
     const pPhone = form.phoneNumber || form.phone || '';
-    const dName = selectedDoctor?.name || form.doctorId || 'Dr. Amir Khan';
-    const dId = selectedDoctor?.id || form.doctorId || 'DOC-008';
+    // Use the explicitly selected doctor — no hardcoded fallback
+    const dId = selectedDoctor?.id || form.doctorId || '';
+    const dName = selectedDoctor?.name || '';
+
 
     handleSave?.({
       ...form,

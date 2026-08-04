@@ -268,10 +268,9 @@ export const isPatientForDoctor = (patient, currentDoctor, user, doctorAppointme
     ''
   ).toLowerCase().replace(/^dr\.\s*/g, '').trim();
 
-  if (docNameClean && assignedStr) {
-    if (docNameClean === assignedStr || docNameClean.includes(assignedStr) || assignedStr.includes(docNameClean)) {
-      return true;
-    }
+  // Exact name match only — no partial/includes match to avoid cross-doctor leakage
+  if (docNameClean && assignedStr && docNameClean === assignedStr) {
+    return true;
   }
 
   // 3. Match if patient exists in doctor's appointments

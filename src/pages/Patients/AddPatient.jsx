@@ -22,8 +22,9 @@ export default function AddPatient() {
       const selectedDoctor = doctors.find((doc) => doc.id === formData.doctorId || doc.name === formData.assignedDoctor || doc.name === formData.doctorId);
       const selectedDepartment = departments.find((dept) => dept.id === formData.departmentId) || departments.find((dept) => dept.name === formData.department);
       const patientName = formData.fullName || formData.name || 'Unnamed Patient';
-      const docName = selectedDoctor?.name || formData.assignedDoctor || formData.doctor || 'Dr. Amir Khan';
-      const docId = selectedDoctor?.id || formData.doctorId || 'DOC-008';
+      // Use the explicitly selected doctor — no hardcoded fallback
+      const docId = selectedDoctor?.id || formData.doctorId || '';
+      const docName = selectedDoctor?.name || formData.assignedDoctor || formData.doctor || '';
 
       const newPatient = {
         ...formData,
